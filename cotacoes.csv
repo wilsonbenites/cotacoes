@@ -63,7 +63,7 @@ caminho_arquivo_csv = os.path.join(caminho_diretorio, 'cotacoes.csv')
 df.to_csv(caminho_arquivo_csv, mode='a', index=False, header=not os.path.isfile(caminho_arquivo_csv))
 
 print(df)
-print(f'Caminho completo do arquivo CSV: {caminho_arquivo_csv}')
+
 
 
 driver.quit()
