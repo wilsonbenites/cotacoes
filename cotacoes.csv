@@ -1,0 +1,69 @@
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
+from datetime import datetime
+import pandas as pd
+import os
+
+options = webdriver.FirefoxOptions()
+driver = webdriver.Firefox(options=options)
+
+moedas = ['Dólar americano', 'Peso Argentino', 'Libra Esterlina', 'Euro']
+
+data_hora_atual = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+dados_moedas = []
+
+for moeda in moedas:
+    if moeda == 'Dólar americano':
+        pesquisa = f'Cotacao {moeda} para Real'
+        url = 'https://www.google.com/finance/quote/USD-BRL?sa=X&ved=2ahUKEwiItsaDq8eDAxWKppUCHR9LDyIQmY0JegQIBxAr'
+    elif moeda == 'Peso Argentino':
+        pesquisa = f'Cotacao {moeda} para Real'
+        url = 'https://www.google.com/finance/quote/ARS-BRL?sa=X&ved=2ahUKEwiHrMukr8eDAxU9p5UCHS-tDI8QmY0JegQIBxAr'
+    elif moeda == 'Libra Esterlina':
+        pesquisa = f'Cotacao {moeda} para Real'
+        url = 'https://www.google.com/finance/quote/GBP-BRL?sa=X&ved=2ahUKEwibuJOisMeDAxUCrpUCHY8RDK8QmY0JegQIBhAr'
+    elif moeda == 'Euro':
+        pesquisa = f'Cotacao {moeda} para Real'
+        url = 'https://www.google.com/finance/quote/EUR-BRL?sa=X&ved=2ahUKEwiSyqW4sMeDAxVEp5UCHcLrCHMQmY0JegQIBhAr'
+
+    try:
+        driver.get(url)
+    except Exception as e:
+        print(f"Erro ao abrir a página: {e}")
+        continue
+
+    xpath_cotacao = '//div[@class="YMlKec fxKbKc"]'
+
+    try:
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, xpath_cotacao)))
+        cotacao_element = driver.find_element(By.XPATH, xpath_cotacao)
+        cotacao = cotacao_element.text
+    except TimeoutException as te:
+        print(f"Tempo limite atingido ao aguardar a cotação: {te}")
+        continue
+    except Exception as e:
+        print(f"Erro ao extrair a cotação: {e}")
+        continue
+
+    dados_moeda = {'data/hora': data_hora_atual, 'moeda': moeda, 'cotacao': cotacao}
+    dados_moedas.append(dados_moeda)
+
+df = pd.DataFrame(dados_moedas)
+
+caminho_diretorio = 'Cotacoes'
+if not os.path.exists(caminho_diretorio):
+    os.makedirs(caminho_diretorio)
+
+caminho_arquivo_csv = os.path.join(caminho_diretorio, 'cotacoes.csv')
+df.to_csv(caminho_arquivo_csv, mode='a', index=False, header=not os.path.isfile(caminho_arquivo_csv))
+
+print(df)
+print(f'Caminho completo do arquivo CSV: {caminho_arquivo_csv}')
+
+
+driver.quit()
